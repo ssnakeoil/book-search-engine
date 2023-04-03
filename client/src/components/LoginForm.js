@@ -1,14 +1,23 @@
 // see SignupForm.js for comments
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Form, Button, Alert } from 'react-bootstrap';
-
-import { loginUser } from '../utils/API';
 import Auth from '../utils/auth';
+import { useMutation } from '@apollo/client';
+import { LOGIN_USER } from '../utils/mutations';
 
 const LoginForm = () => {
   const [userFormData, setUserFormData] = useState({ email: '', password: '' });
   const [validated] = useState(false);
   const [showAlert, setShowAlert] = useState(false);
+  const [login, { error }] = useMutation(LOGIN_USER); // useMutation() is a hook that executes the LOGIN_USER mutation in the mutations.js file
+
+  useEffect(() => { // useEffect() is a hook that runs the code inside of it when the component loads
+    if (error) {
+      setShowAlert(true);
+    } else {
+      setShowAlert(false);
+    }
+  }, [error]);
 
   const handleInputChange = (event) => {
     const { name, value } = event.target;
@@ -20,24 +29,22 @@ const LoginForm = () => {
 
     // check if form has everything (as per react-bootstrap docs)
     const form = event.currentTarget;
-    if (form.checkValidity() === false) {
+    if (form.checkValidity() === false) {// if the form is not valid, then return and do not execute the rest of the code
       event.preventDefault();
       event.stopPropagation();
     }
 
-    try {
-      const response = await loginUser(userFormData);
-
+    try { // try to execute the login() mutation and log in the user
+      const { data } = await login({ // destructure the data property out of the response object
+        variables: { ...userFormData },
+      });
+      Auth.login(data.login.token);
       if (!response.ok) {
         throw new Error('something went wrong!');
       }
 
-      const { token, user } = await response.json();
-      console.log(user);
-      Auth.login(token);
-    } catch (err) {
-      console.error(err);
-      setShowAlert(true);
+    } catch (e) {
+      console.error(e);
     }
 
     setUserFormData({

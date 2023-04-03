@@ -1,7 +1,7 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Form, Button, Alert } from 'react-bootstrap';
-
-import { createUser } from '../utils/API';
+import { ADD_USER } from '../utils/mutations'; // import the ADD_USER mutation
+import { useMutation } from '@apollo/client'; // import the useMutation() hook
 import Auth from '../utils/auth';
 
 const SignupForm = () => {
@@ -11,6 +11,14 @@ const SignupForm = () => {
   const [validated] = useState(false);
   // set state for alert
   const [showAlert, setShowAlert] = useState(false);
+
+  useEffect(() => { // useEffect() is a hook that runs the code inside of it when the component loads
+    if (error) {
+      setShowAlert(true); // if there is an error, then show the alert
+    } else {
+      setShowAlert(false); // if there is no error, then do not show the alert
+    }
+  }, [error]); // the useEffect() hook will run whenever the error variable changes
 
   const handleInputChange = (event) => {
     const { name, value } = event.target;
